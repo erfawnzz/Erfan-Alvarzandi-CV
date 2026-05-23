@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="رزومه انیمیشنی عرفان الوارزندی - برنامه‌نویس C# و دانشجوی کامپیوتر">
+    <title>عرفان الوارزندی | رزومه پیشرفته و انیمیشنی</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* پس‌زمینه پویا با حرکت امواج و ذرات */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0f1e;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        /* ویدیوی پس‌زمینه (یک کلیپ کوتاه از فضای مجازی) – در صورت عدم لود، تصویر متحرک CSS جایگزین */
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            opacity: 0.4;
+        }
+        /* اگر ویدیو لود نشد، یک گرادیان متحرک به عنوان پشتیبان */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0a0f2e, #03050b);
+            z-index: -1;
+        }
+        /* انیمیشن ذرات (کانواس) */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* کارت‌های شیشه‌ای با افکت‌های انیمیشن */
+        .glass-card {
+            background: rgba(15, 25, 45, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 32px;
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 35px 50px -15px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        /* چیدمان دو ستونه مدرن */
+        .resume-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        /* سایدبار */
+        .sidebar {
+            padding: 2rem 1.5rem;
+        }
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1rem;
+            display: block;
+            border: 3px solid #4c9aff;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 25px -5px rgba(76,154,255,0.4);
+        }
+        .profile-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #4c9aff;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #4c9aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+        }
+        .title {
+            text-align: center;
+            color: #4c9aff;
+            font-weight: 600;
+            margin: 0.5rem 0 1rem;
+        }
+        .contact-info p {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 0.8rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* مهارت‌ها با نوار متحرک */
+        .skill-item {
+            margin: 1.2rem 0;
+        }
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #4c9aff, #a855f7);
+            width: 0;
+            height: 100%;
+            border-radius: 20px;
+            transition: width 1.2s ease-out;
+        }
+
+        /* انیمیشن ورود بخش‌ها */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* دکمه دانلود و دارک مود - اما اینجا نیازی به دارک مود نیست چون پس زمینه متحرک داریم */
+        .theme-toggle, .scroll-top {
+            position: fixed;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 40px;
+            padding: 0.6rem 1.2rem;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.3s;
+        }
+        .theme-toggle { top: 1.5rem; left: 1.5rem; }
+        .scroll-top { bottom: 1.5rem; left: 1.5rem; opacity: 0; visibility: hidden; }
+        .scroll-top.visible { opacity: 1; visibility: visible; }
+        .btn-download {
+            background: linear-gradient(90deg, #4c9aff, #a855f7);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-download:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px #4c9aff;
+        }
+        .social-links a {
+            font-size: 1.8rem;
+            margin: 0 0.5rem;
+            color: white;
+            transition: 0.3s;
+        }
+        .social-links a:hover {
+            color: #4c9aff;
+            transform: translateY(-5px);
+        }
+
+        /* استایل فرم */
+        .contact-form input, .contact-form textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 28px;
+            padding: 0.8rem 1.2rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        .contact-form button {
+            background: #4c9aff;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .interest-tag {
+            background: rgba(76,154,255,0.2);
+            border-radius: 40px;
+            padding: 0.3rem 1rem;
+            display: inline-block;
+            margin: 0.2rem;
+        }
+        @media (max-width: 800px) {
+            .resume-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* تایپ رایتر برای عنوان */
+        .typing {
+            font-size: 1.2rem;
+            direction: ltr;
+            text-align: center;
+            font-family: monospace;
+            color: #ccc;
+        }
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            background-color: #4c9aff;
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink {
+            0%,100%{opacity:1;}
+            50%{opacity:0;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ویدیوی پس‌زمینه (یک کلیپ کوتاه از فضای دیجیتال - لینک عمومی و رایگان) -->
+<video autoplay loop muted playsinline class="bg-video" poster="https://cdn.pixabay.com/video/2022/07/03/123456-abstract-digital-bg.mp4">
+    <source src="https://cdn.pixabay.com/video/2022/08/30/130948-744297198_tiny.mp4" type="video/mp4">
+    <!-- اگر مرورگر پشتیبانی نکرد، تصویر متحرک CSS دیده می‌شود -->
+</video>
+<div class="bg-overlay"></div>
+<canvas id="particles-canvas"></canvas>
+
+<button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-adjust"></i> تغییر نور</button>
+<button class="scroll-top" id="scrollTopBtn"><i class="fas fa-arrow-up"></i></button>
+
+<div class="container">
+    <div class="resume-grid">
+        <!-- سایدبار راست -->
+        <aside class="glass-card sidebar animate-on-scroll">
+            <div class="profile">
+                <img id="profileImg" class="profile-img" src="https://randomuser.me/api/portraits/men/32.jpg" alt="پروفایل">
+                <h1>عرفان الوارزندی</h1>
+                <div class="title">برنامه‌نویس #C & علاقه‌مند به هوش مصنوعی</div>
+                <div class="contact-info">
+                    <p><i class="fas fa-phone-alt"></i> +98 9330445028</p>
+                    <p><i class="fas fa-envelope"></i> erfawnzz@yahoo.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> آمل، ایران</p>
+                    <p><i class="fas fa-calendar"></i> متولد ۱۳۸۱</p>
+                </div>
+            </div>
+            <div style="margin: 1.5rem 0;">
+                <h3 style="margin-bottom:1rem;">مهارت‌های حرفه‌ای</h3>
+                <div class="skill-item"><div class="skill-header"><span>C# / .NET</span><span>75%</span></div><div class="progress-bar"><div class="progress-fill" data-width="75"></div></div></div>
+                <div class="skill-item"><div class="skill-header"><span>Python</span><span>60%</span></div><div class="progress-bar"><div class="progress-fill" data-width="60"></div></div></div>
+                <div class="skill-item"><div class="skill-header"><span>SQL Server</span><span>70%</span></div><div class="progress-bar"><div class="progress-fill" data-width="70"></div></div></div>
+                <div class="skill-item"><div class="skill-header"><span>HTML/CSS</span><span>65%</span></div><div class="progress-bar"><div class="progress-fill" data-width="65"></div></div></div>
+                <div class="skill-item"><div class="skill-header"><span>Git/GitHub</span><span>60%</span></div><div class="progress-bar"><div class="progress-fill" data-width="60"></div></div></div>
+            </div>
+            <div>
+                <h3>زبان‌ها</h3>
+                <p>فارسی (مادری) ۱۰۰%</p>
+                <p>انگلیسی (مکالمه) ۶۰%</p>
+                <p>آلمانی (مقدماتی) ۳۰%</p>
+            </div>
+            <div style="margin-top:1.5rem;">
+                <h3>علاقه‌مندی‌ها</h3>
+                <div><span class="interest-tag">🏔 کوهنوردی</span> <span class="interest-tag">🎬 فیلم</span> <span class="interest-tag">♟ شطرنج</span> <span class="interest-tag">🎮 بازی گروهی</span></div>
+            </div>
+            <div class="social-links" style="margin-top:1.8rem; text-align:center;">
+                <a href="https://t.me/ErfaWn_zz" target="_blank"><i class="fab fa-telegram"></i></a>
+                <a href="https://www.linkedin.com/in/erfan-alvarzandi-143" target="_blank"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </aside>
+
+        <!-- محتوای اصلی -->
+        <main>
+            <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem; text-align:center;">
+                <div class="typing" id="typingText"></div>
+                <p style="margin-top:1rem;">🔹 مسئولیت‌پذیر، زمان‌شناس، سرعت یادگیری بالا | عاشق چالش‌های کدنویسی</p>
+            </div>
+
+            <div class="glass-card animate-on-scroll" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <h2 style="border-right: 3px solid #4c9aff; padding-right: 1rem;">درباره من</h2>
+                <p style="margin-top: 1rem;">شخصی متعهد و تحلیل‌گر با مهارت حل مسئله. دانشجوی مهندسی کامپیوتر با اشتیاق به توسعه نرم‌افزارهای کارآمد. توانایی کار تیمی و ارتباط مؤثر. به دنبال فرصتی برای رشد و ارتقاء مهارت در محیط‌های پویا.</p>
+            </div>
+
+            <div class="glass-card animate-on-scroll" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <h2 style="border-right: 3px solid #4c9aff; padding-right: 1rem;">تحصیلات و دوره‌ها</h2>
+                <div style="margin-top:1rem;">
+                    <h3>🎓 کارشناسی مهندسی کامپیوتر</h3>
+                    <p>دانشگاه تخصصی فناوری‌های نوین آمل | ۱۴۰۰ – اکنون</p>
+                    <h3 style="margin-top:1rem;">📜 گواهینامه‌ها</h3>
+                    <span class="interest-tag">ICDL (فنی حرفه‌ای)</span>
+                    <span class="interest-tag">Easy Maths - Teta</span>
+                    <span class="interest-tag">کمک‌های اولیه - هلال احمر</span>
+                </div>
+            </div>
+
+            <div class="glass-card animate-on-scroll" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <h2 style="border-right: 3px solid #4c9aff; padding-right: 1rem;">پروژه‌های شاخص</h2>
+                <ul style="margin-right: 1.5rem; margin-top: 0.8rem;">
+                    <li>📘 سیستم مدیریت کتابخانه با #C و SQL Server – شامل جستجو، امانت و گزارش‌گیری</li>
+                    <li>💻 وب‌سایت شخصی رزومه با انیمیشن و افکت‌های پیشرفته (HTML/CSS/JS)</li>
+                    <li>🧠 الگوریتم‌های هوشمند در پایتون برای حل مسائل بهینه‌سازی</li>
+                </ul>
+            </div>
+
+            <div class="glass-card animate-on-scroll" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <h2 style="border-right: 3px solid #4c9aff; padding-right: 1rem;">ارسال پیام</h2>
+                <form id="contactForm" class="contact-form" style="margin-top:1rem;">
+                    <input type="text" id="name" placeholder="نام کامل" required>
+                    <input type="email" id="email" placeholder="ایمیل" required>
+                    <textarea rows="3" placeholder="پیام شما..." id="message" required></textarea>
+                    <button type="submit">ارسال پیام <i class="fas fa-paper-plane"></i></button>
+                </form>
+                <div style="text-align:center; margin-top: 2rem;">
+                    <div class="btn-download" id="downloadResumeBtn"><i class="fas fa-file-pdf"></i> دانلود رزومه (PDF)</div>
+                </div>
+            </div>
+            <footer style="text-align:center; margin: 1rem 0; color:#aaa;">© ۱۴۰۴ عرفان الوارزندی – طراحی شده با انیمیشن و عشق</footer>
+        </main>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ========== انیمیشن ذرات پس‌زمینه (کانواس) ==========
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        let particles = [];
+        const PARTICLE_COUNT = 80;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.8;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.color = `rgba(76, 154, 255, ${Math.random() * 0.4 + 0.1})`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+        }
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
+
+        // ========== اسکرول و انیمیشن نمایش المان‌ها ==========
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.2 });
+        animatedElements.forEach(el => observer.observe(el));
+
+        // ========== نوار مهارت‌ها (پیشرفت هنگام مشاهده) ==========
+        const skillFills = document.querySelectorAll('.progress-fill');
+        const skillObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const fill = entry.target;
+                    const width = fill.getAttribute('data-width');
+                    fill.style.width = width + '%';
+                    skillObserver.unobserve(fill);
+                }
+            });
+        }, { threshold: 0.5 });
+        skillFills.forEach(fill => skillObserver.observe(fill));
+
+        // ========== تایپ رایتر برای متن معرفی ==========
+        const texts = ["C# Developer", "عاشق کد تمیز", "Problem Solver", "علاقه‌مند به هوش مصنوعی"];
+        let index = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typingElement = document.getElementById('typingText');
+        function typeEffect() {
+            const current = texts[index];
+            if (isDeleting) {
+                typingElement.innerHTML = current.substring(0, charIndex-1) + '<span class="cursor">|</span>';
+                charIndex--;
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    index = (index+1) % texts.length;
+                }
+            } else {
+                typingElement.innerHTML = current.substring(0, charIndex+1) + '<span class="cursor">|</span>';
+                charIndex++;
+                if (charIndex === current.length) {
+                    isDeleting = true;
+                    setTimeout(() => {}, 1000);
+                }
+            }
+            setTimeout(typeEffect, isDeleting ? 70 : 150);
+        }
+        typeEffect();
+
+        // ========== دکمه دارک/لایت – تغییر شفافیت و رنگ پس زمینه نسبی ==========
+        const themeBtn = document.getElementById('themeToggleBtn');
+        let isLight = false;
+        themeBtn.addEventListener('click', () => {
+            const bgVideo = document.querySelector('.bg-video');
+            const overlay = document.querySelector('.bg-overlay');
+            if (!isLight) {
+                document.body.style.background = "#f0f4fa";
+                overlay.style.background = "rgba(255,255,240,0.8)";
+                bgVideo.style.opacity = "0.2";
+                isLight = true;
+                themeBtn.innerHTML = "<i class='fas fa-moon'></i> دارک مود";
+            } else {
+                document.body.style.background = "#0a0f1e";
+                overlay.style.background = "radial-gradient(circle at center, #0a0f2e, #03050b)";
+                bgVideo.style.opacity = "0.4";
+                isLight = false;
+                themeBtn.innerHTML = "<i class='fas fa-sun'></i> لایت مود";
+            }
+        });
+
+        // ========== آپلود عکس پروفایل ==========
+        const profileImg = document.getElementById('profileImg');
+        profileImg.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        profileImg.src = ev.target.result;
+                        localStorage.setItem('profileImage', ev.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+        const savedImg = localStorage.getItem('profileImage');
+        if(savedImg) profileImg.src = savedImg;
+
+        // ========== دکمه اسکرول به بالا ==========
+        const scrollBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', () => {
+            if(window.scrollY > 500) scrollBtn.classList.add('visible');
+            else scrollBtn.classList.remove('visible');
+        });
+        scrollBtn.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+        // ========== شبیه‌سازی دانلود رزومه ==========
+        const downloadBtn = document.getElementById('downloadResumeBtn');
+        downloadBtn.addEventListener('click', () => {
+            console.log("📄 دانلود رزومه عرفان الوارزندی (PDF شبیه‌سازی شده با افکت حرفه‌ای)");
+            alert("رزومه با موفقیت دانلود شد! (نسخه آزمایشی)");
+        });
+
+        // ========== فرم تماس ==========
+        const form = document.getElementById('contactForm');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const msg = document.getElementById('message').value.trim();
+            if(!name || !email || !msg) {
+                alert("لطفاً تمام فیلدها را پر کنید");
+                return;
+            }
+            if(!email.includes('@')) {
+                alert("ایمیل نامعتبر");
+                return;
+            }
+            alert("✅ پیام شما با موفقیت ارسال شد. ممنون از اعتماد شما!");
+            console.log(`پیام از ${name} (${email}): ${msg}`);
+            form.reset();
+        });
+    })();
+</script>
+</body>
+</html>
